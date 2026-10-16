@@ -31,6 +31,14 @@
     </Sets>
   </Requirements>
 
+  <FormSettings>
+    <Form xsi:type="ItemEdit">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://roquepz.github.io/outlook-assinatura/src/taskpane/HTML/editsignature.html"/>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>  
+
   <Permissions>ReadWriteMailbox</Permissions>
 
   <Rule xsi:type="RuleCollection" Mode="Or">
