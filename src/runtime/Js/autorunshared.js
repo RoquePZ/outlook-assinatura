@@ -1,36 +1,62 @@
 
-/* Inicialização do complemento de assinatura do Outlook */
+/* Evento de criação de nova mensagem do Outlook */
 
-Office.onReady(function () {
-    // O Outlook carregou o Office.js.
-});
+function checkSignature(event) {
+    let concluido = false;
 
-function checkSignature(eventObj) {
+    function finalizar() {
+        if (!concluido) {
+            concluido = true;
+            event.completed();
+        }
+    }
+
     try {
         const mailbox = Office.context.mailbox;
-        const profile = mailbox.userProfile;
+        const perfilSalvo =
+            Office.context.roamingSettings.get("user_info") || {};
 
-        // Dados básicos disponíveis no perfil do Outlook.
-        // Cargo e telefone serão obtidos em uma etapa posterior.
+        const perfilOutlook = mailbox.userProfile || {};
+
+        // Preserva os dados cadastrados pelo usuário.
+        // Usa o perfil do Outlook como alternativa.
         const userInfo = {
-            name: profile.displayName || "",
-            email: profile.emailAddress || "",
-            job: "",
-            phone: ""
+            name: perfilSalvo.name || perfilOutlook.displayName || "",
+            email: perfilSalvo.email ||
+                   perfilOutlook.emailAddress || "",
+            job: perfilSalvo.job || "",
+            department: perfilSalvo.department || "",
+            phone: perfilSalvo.phone || ""
         };
 
-        // Disponibiliza os dados para os outros arquivos do complemento.
-        Office.context.roamingSettings.set("user_info", userInfo);
-
-        if (typeof insert_auto_signature === "function") {
-            insert_auto_signature("new_message", userInfo, eventObj);
-        } else {
-            console.error("A função insert_auto_signature não foi carregada.");
-            eventObj.completed();
+        if (!userInfo.name && !userInfo.email) {
+            console.warn(
+                "Perfil da assinatura não configurado."
+            );
+            finalizar();
+            return;
         }
+
+        if (typeof insert_auto_signature !== "function") {
+            console.error(
+                "A função insert_auto_signature não foi carregada."
+            );
+            finalizar();
+            return;
+        }
+
+        insert_auto_signature(
+            "new_message",
+            userInfo,
+            { completed: finalizar }
+        );
+
     } catch (error) {
-        console.error("Erro ao preparar a assinatura:", error);
-        eventObj.completed();
+        console.error(
+            "Erro ao preparar a assinatura:",
+            error
+        );
+        finalizar();
     }
 }
 
