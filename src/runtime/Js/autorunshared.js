@@ -61,4 +61,51 @@ function checkSignature(event) {
     }
 }
 
+function insert_auto_signature(composeType, userInfo, eventObj) {
+    try {
+        const nome = escapeHtml(userInfo.name || "");
+        const email = escapeHtml(userInfo.email || "");
+        const cargo = escapeHtml(userInfo.job || "");
+        const departamento = escapeHtml(userInfo.department || "");
+
+        const assinatura = `
+          <div style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">
+            <strong>${nome}</strong><br>
+            ${cargo ? cargo + "<br>" : ""}
+            ${departamento ? departamento + "<br>" : ""}
+            ${email ? '<a href="mailto:' + email + '">' + email + '</a>' : ""}
+          </div>
+        `;
+
+        Office.context.mailbox.item.body.setSignatureAsync(
+            assinatura,
+            { coercionType: Office.CoercionType.Html },
+            function (result) {
+                if (result.status !== Office.AsyncResultStatus.Succeeded) {
+                    console.error("Não foi possível inserir a assinatura:", result.error);
+                }
+
+                if (eventObj && typeof eventObj.completed === "function") {
+                    eventObj.completed();
+                }
+            }
+        );
+    } catch (error) {
+        console.error("Erro ao inserir assinatura:", error);
+
+        if (eventObj && typeof eventObj.completed === "function") {
+            eventObj.completed();
+        }
+    }
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 Office.actions.associate("checkSignature", checkSignature);
