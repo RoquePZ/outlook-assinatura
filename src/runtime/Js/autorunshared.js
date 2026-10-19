@@ -1,4 +1,3 @@
-
 /* Evento de criação de nova mensagem do Outlook */
 
 function checkSignature(event) {
