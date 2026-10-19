@@ -11,14 +11,14 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
         const cargo = escapeHtml(userInfo.job || "");
         const departamento = escapeHtml(userInfo.department || "");
 
-        const assinatura = `
-            <div style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">
-                <strong>${nome}</strong><br>
-                ${cargo ? cargo + "<br>" : ""}
-                ${departamento ? departamento + "<br>" : ""}
-                ${email ? '<a href="mailto:' + email + '">' + email + '</a>' : ""}
-            </div>
-        `;
+        const assinatura = [
+            '<div style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">',
+            '<strong>' + nome + '</strong><br>',
+            cargo ? cargo + '<br>' : '',
+            departamento ? departamento + '<br>' : '',
+            email ? '<a href="mailto:' + email + '">' + email + '</a>' : '',
+            '</div>'
+        ].join('');
 
         Office.context.mailbox.item.body.setSignatureAsync(
             assinatura,
