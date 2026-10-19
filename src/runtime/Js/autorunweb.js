@@ -1,4 +1,4 @@
-
+```javascript
 /*
  * Inserção automática da assinatura no Outlook.
  * Os dados são lidos das configurações do complemento.
@@ -12,44 +12,33 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
         const departamento = escapeHtml(userInfo.department || "");
 
         const assinatura = `
-          <div style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">
-            <strong>${nome}</strong><br>
-            ${cargo ? cargo + "<br>" : ""}
-            ${departamento ? departamento + "<br>" : ""}
-            ${email ? '<a href="mailto:' + email + '">' + email + '</a>' : ""}
-          </div>
+            <div style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">
+                <strong>${nome}</strong><br>
+                ${cargo ? cargo + "<br>" : ""}
+                ${departamento ? departamento + "<br>" : ""}
+                ${email ? '<a href="mailto:' + email + '">' + email + '</a>' : ""}
+            </div>
         `;
 
-        
-Office.context.mailbox.item.body.setSignatureAsync(
-    assinatura,
-    {
-        coercionType: Office.CoercionType.Html,
-        asyncContext: eventObj
-    },
-    function (result) {
-        console.log("Resultado da inserção:", result.status);
-
-        if (result.status !== Office.AsyncResultStatus.Succeeded) {
-            console.error(
-                "Erro ao inserir assinatura:",
-                result.error
-            );
-        }
-
-        const evento = result.asyncContext;
-        if (evento && typeof evento.completed === "function") {
-            evento.completed();
-        }
-    }
-);
+        Office.context.mailbox.item.body.setSignatureAsync(
+            assinatura,
+            {
+                coercionType: Office.CoercionType.Html,
+                asyncContext: eventObj
+            },
+            function (result) {
+                console.log("Resultado da inserção:", result.status);
 
                 if (result.status !== Office.AsyncResultStatus.Succeeded) {
-                    console.error("Não foi possível inserir a assinatura:", result.error);
+                    console.error(
+                        "Erro ao inserir assinatura:",
+                        result.error
+                    );
                 }
 
-                if (eventObj && typeof eventObj.completed === "function") {
-                    eventObj.completed();
+                const evento = result.asyncContext;
+                if (evento && typeof evento.completed === "function") {
+                    evento.completed();
                 }
             }
         );
@@ -70,3 +59,4 @@ function escapeHtml(value) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
 }
+```
