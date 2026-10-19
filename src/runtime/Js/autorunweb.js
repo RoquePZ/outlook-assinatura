@@ -20,10 +20,30 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
           </div>
         `;
 
-        Office.context.mailbox.item.body.setSignatureAsync(
-            assinatura,
-            { coercionType: Office.CoercionType.Html },
-            function (result) {
+        
+Office.context.mailbox.item.body.setSignatureAsync(
+    assinatura,
+    {
+        coercionType: Office.CoercionType.Html,
+        asyncContext: eventObj
+    },
+    function (result) {
+        console.log("Resultado da inserção:", result.status);
+
+        if (result.status !== Office.AsyncResultStatus.Succeeded) {
+            console.error(
+                "Erro ao inserir assinatura:",
+                result.error
+            );
+        }
+
+        const evento = result.asyncContext;
+        if (evento && typeof evento.completed === "function") {
+            evento.completed();
+        }
+    }
+);
+
                 if (result.status !== Office.AsyncResultStatus.Succeeded) {
                     console.error("Não foi possível inserir a assinatura:", result.error);
                 }
