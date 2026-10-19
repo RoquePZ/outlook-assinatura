@@ -2,6 +2,7 @@
 /* Evento de criação de nova mensagem do Outlook */
 
 function checkSignature(event) {
+    console.log("EVENTO checkSignature EXECUTADO");    
     let concluido = false;
 
     function finalizar() {
