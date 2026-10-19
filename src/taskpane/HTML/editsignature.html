@@ -58,6 +58,12 @@
             onclick="create_user_info()">
       Salvar assinatura
     </button>
+    
+    <button type="button" id="insert_signature_button"
+        class="registerbtn"
+        onclick="insert_signature_into_email()">
+      Inserir assinatura no e-mail
+    </button>    
 
     <button type="button" id="reset_all_config_btn"
             class="registerbtn"
@@ -102,5 +108,94 @@
       }
     }
   </script>
+
+<script>
+function insert_signature_into_email() {
+    const mensagem = document.getElementById("message");
+
+    try {
+        const mailbox = Office.context.mailbox;
+        const item = mailbox && mailbox.item;
+
+        if (!item || !item.body) {
+            mensagem.textContent =
+                "Abra uma nova mensagem de e-mail e tente novamente.";
+            return;
+        }
+
+        const perfil =
+            Office.context.roamingSettings.get("user_info");
+
+        if (!perfil || !perfil.name || !perfil.email) {
+            mensagem.textContent =
+                "Salve primeiro os dados da assinatura.";
+            return;
+        }
+
+        const escape = valor => String(valor || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
+        const linhas = [];
+
+        linhas.push("<strong>" + escape(perfil.name) + "</strong>");
+
+        if (perfil.job) {
+            linhas.push(escape(perfil.job));
+        }
+
+        if (perfil.department) {
+            linhas.push(escape(perfil.department));
+        }
+
+        if (perfil.phone) {
+            linhas.push("Telefone: " + escape(perfil.phone));
+        }
+
+        linhas.push(
+            '<a href="mailto:' + escape(perfil.email) + '">' +
+            escape(perfil.email) + "</a>"
+        );
+
+        if (perfil.greeting) {
+            linhas.unshift(escape(perfil.greeting));
+        }
+
+        const assinatura =
+            '<div style="font-family:Arial,sans-serif;' +
+            'font-size:10pt;color:#333;">' +
+            linhas.join("<br>") +
+            "</div>";
+
+        item.body.setSignatureAsync(
+            assinatura,
+            { coercionType: Office.CoercionType.Html },
+            function (resultado) {
+                if (resultado.status === Office.AsyncResultStatus.Succeeded) {
+                    mensagem.textContent =
+                        "Solicitação de inserção concluída.";
+                } else {
+                    console.error(
+                        "Erro ao inserir assinatura:",
+                        resultado.error
+                    );
+                    mensagem.textContent =
+                        "Não foi possível inserir a assinatura. " +
+                        (resultado.error?.message || "");
+                }
+            }
+        );
+    } catch (erro) {
+        console.error("Erro ao inserir assinatura:", erro);
+        mensagem.textContent =
+            "Falha ao inserir assinatura: " + erro.message;
+    }
+}
+</script>
+
+  
 </body>
 </html>
