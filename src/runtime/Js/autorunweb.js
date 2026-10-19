@@ -1,4 +1,3 @@
-```javascript
 /*
  * Inserção automática da assinatura no Outlook.
  * Os dados são lidos das configurações do complemento.
