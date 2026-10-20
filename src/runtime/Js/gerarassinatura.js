@@ -51,3 +51,4 @@ async function gerarImagemAssinatura(userInfo) {
 
     return canvas.toDataURL("image/png");
 }
+console.log("FUNÇÃO gerarImagemAssinatura CARREGADA");
