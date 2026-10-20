@@ -50,6 +50,7 @@ function checkSignature(event) {
 async function insert_auto_signature(composeType, userInfo, eventObj) {
     try {
         const dataUrl = await gerarImagemAssinatura(userInfo);
+        console.log("Imagem gerada:", dataUrl.substring(0, 50));
 
         const assinatura = `
           <p style="margin:0;padding:0;">
