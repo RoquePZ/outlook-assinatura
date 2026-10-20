@@ -23,10 +23,13 @@
         });
       }
 
-      carregarScript("../Js/autorunshared.js")
+      carregarScript("../Js/gerarassinatura.js")
         .then(function () {
-          return carregarScript("../Js/autorunweb.js");
-        })
+        return carregarScript("../Js/autorunshared.js");
+      })
+        .then(function () {
+        return carregarScript("../Js/autorunweb.js");
+      })
         .then(function () {
           console.log("Scripts do runtime carregados.");
         })
