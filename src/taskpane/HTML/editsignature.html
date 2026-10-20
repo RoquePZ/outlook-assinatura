@@ -196,6 +196,13 @@ function insert_signature_into_email() {
 }
 </script>
 
+  <script>
+Office.onReady(function (info) {
+    if (info.host === Office.HostType.Outlook) {
+        console.log("Office.js inicializado no Outlook.");
+    }
+});
+</script>
   
 </body>
 </html>
