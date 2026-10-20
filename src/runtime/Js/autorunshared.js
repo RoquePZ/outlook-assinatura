@@ -1,9 +1,7 @@
-/* Assinatura automática personalizada PZ */
+/* Assinatura automática PZ - versão de recuperação */
 
 function checkSignature(event) {
     console.log("EVENTO checkSignature EXECUTADO");
-    console.log("VERSÃO NOVA DA ASSINATURA PZ - TESTE 2026");
-
     let concluido = false;
 
     function finalizar() {
@@ -23,68 +21,60 @@ function checkSignature(event) {
             name: perfilSalvo.name || perfilOutlook.displayName || "",
             email: perfilSalvo.email || perfilOutlook.emailAddress || "",
             job: perfilSalvo.job || "",
-            department: perfilSalvo.department || ""
+            department: perfilSalvo.department || "",
+            phone: perfilSalvo.phone || ""
         };
 
-        if (!userInfo.name && !userInfo.email) {
-            console.warn("Perfil da assinatura não configurado.");
-            finalizar();
-            return;
-        }
-
-        if (typeof gerarImagemAssinatura !== "function") {
-            console.error("A função gerarImagemAssinatura não foi carregada.");
-            finalizar();
-            return;
-        }
-
-        insert_auto_signature("new_message", userInfo, {
-            completed: finalizar
-        });
-
+        insert_auto_signature(userInfo, finalizar);
     } catch (error) {
         console.error("Erro ao preparar assinatura:", error);
         finalizar();
     }
 }
 
-async function insert_auto_signature(composeType, userInfo, eventObj) {
-    try {
-        const dataUrl = await gerarImagemAssinatura(userInfo);
-        console.log("Imagem gerada:", dataUrl.substring(0, 50));
+function insert_auto_signature(userInfo, finalizar) {
+    const esc = value => String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 
-        const assinatura = `
-          <p style="margin:0;padding:0;">
-            <img src="${dataUrl}"
-                 alt="Assinatura PZ Advogados"
-                 width="2048"
-                 style="display:block;width:100%;max-width:700px;height:auto;border:0;">
-          </p>
-        `;
+    const nome = esc(userInfo.name);
+    const email = esc(userInfo.email);
+    const cargo = esc(userInfo.job);
+    const departamento = esc(userInfo.department);
 
-        Office.context.mailbox.item.body.setSignatureAsync(
-            assinatura,
-            { coercionType: Office.CoercionType.Html },
-            function (result) {
-                if (result.status !== Office.AsyncResultStatus.Succeeded) {
-                    console.error("Erro ao inserir assinatura:", result.error);
-                } else {
-                    console.log("Assinatura personalizada inserida.");
-                }
+    const assinatura = `
+      <table cellpadding="0" cellspacing="0" border="0"
+        style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">
+        <tr>
+          <td style="padding-right:14px;vertical-align:middle;">
+            <img src="https://roquepz.github.io/outlook-assinatura/Logo%20PZ.png"
+              alt="Logo PZ" width="100"
+              style="display:block;width:100px;height:auto;border:0;">
+          </td>
+          <td style="border-left:2px solid #d7d7d7;padding-left:14px;vertical-align:middle;">
+            <strong style="font-size:11pt;color:#222;">${nome}</strong>
+            ${departamento ? `<br>${departamento}` : ""}
+            ${cargo ? `<br>${cargo}` : ""}
+            ${email ? `<br><a href="mailto:${email}" style="color:#0563c1;">${email}</a>` : ""}
+          </td>
+        </tr>
+      </table>`;
 
-                if (eventObj && eventObj.completed) {
-                    eventObj.completed();
-                }
+    Office.context.mailbox.item.body.setSignatureAsync(
+        assinatura,
+        { coercionType: Office.CoercionType.Html },
+        function (result) {
+            if (result.status !== Office.AsyncResultStatus.Succeeded) {
+                console.error("Erro ao inserir assinatura:", result.error);
+            } else {
+                console.log("Assinatura de recuperação inserida.");
             }
-        );
-
-    } catch (error) {
-        console.error("Erro ao gerar a imagem da assinatura:", error);
-
-        if (eventObj && eventObj.completed) {
-            eventObj.completed();
+            finalizar();
         }
-    }
+    );
 }
 
 Office.actions.associate("checkSignature", checkSignature);
