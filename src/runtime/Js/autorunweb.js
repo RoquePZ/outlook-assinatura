@@ -1,4 +1,3 @@
-
 /*
  * Assinatura automática PZ no Outlook Web.
  */
