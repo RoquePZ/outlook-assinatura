@@ -2,6 +2,7 @@
 
 function checkSignature(event) {
     console.log("EVENTO checkSignature EXECUTADO");
+    console.log("VERSÃO NOVA DA ASSINATURA PZ - TESTE 2026");
 
     let concluido = false;
 
