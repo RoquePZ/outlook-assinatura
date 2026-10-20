@@ -13,26 +13,27 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
         const logo =
             "https://roquepz.github.io/outlook-assinatura/Logo%20PZ.png";
 
-        const assinatura = `
-          <table cellpadding="0" cellspacing="0" border="0"
-                 style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">
-            <tr>
-              <td style="padding-right:14px;vertical-align:middle;">
-                <img src="${logo}"
-                     alt="Logo PZ"
-                     width="100"
-                     style="display:block;width:100px;height:auto;border:0;">
-              </td>
-              <td style="border-left:2px solid #d7d7d7;padding-left:14px;vertical-align:middle;">
-                <strong style="font-size:11pt;color:#222;">${nome}</strong>
-                ${cargo ? `<br>${cargo}` : ""}
-                ${departamento ? `<br>${departamento}` : ""}
-                ${telefone ? `<br>Telefone: ${telefone}` : ""}
-                ${email ? `<br><a href="mailto:${email}" style="color:#0563c1;">${email}</a>` : ""}
-              </td>
-            </tr>
-          </table>
-        `;
+        
+const assinatura = `
+  <table cellpadding="0" cellspacing="0" border="0"
+         style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">
+    <tr>
+      <td style="padding-right:14px;vertical-align:middle;">
+        <img src="${logo}"
+             alt="Logo PZ"
+             width="100"
+             style="display:block;width:100px;height:auto;border:0;">
+      </td>
+      <td style="border-left:2px solid #d7d7d7;padding-left:14px;vertical-align:middle;">
+        <strong style="font-size:11pt;color:#222;">${nome}</strong>
+        ${departamento ? `<br>${departamento}` : ""}
+        ${cargo ? `<br>${cargo}` : ""}
+        ${email ? `<br><a href="mailto:${email}" style="color:#0563c1;">${email}</a>` : ""}
+      </td>
+    </tr>
+  </table>
+`;
+
 
         Office.context.mailbox.item.body.setSignatureAsync(
             assinatura,
