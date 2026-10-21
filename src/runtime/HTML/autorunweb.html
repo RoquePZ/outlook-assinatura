@@ -1,85 +1,39 @@
 
-/* Assinatura automática PZ com banner personalizado */
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assinatura Microsoft 365</title>
 
-function insert_auto_signature(composeType, userInfo, eventObj) {
-    try {
-        const nome = escapeHtml(userInfo.name || "");
-        const email = escapeHtml(userInfo.email || "");
-        const cargo = escapeHtml(userInfo.job || "");
-        const departamento = escapeHtml(userInfo.department || "");
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+</head>
+<body>
+  <script>
+    Office.onReady(function (info) {
+      console.log("Runtime do Outlook inicializado:", info.host);
 
-        const fundo =
-            "https://roquepz.github.io/outlook-assinatura/fundo-assinatura.png";
+      function carregarScript(caminho) {
+        return new Promise(function (resolve, reject) {
+          const script = document.createElement("script");
+          script.src = caminho;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
+      }
 
-        const assinatura = `
-          <table cellpadding="0" cellspacing="0" border="0"
-                 width="700"
-                 style="width:700px;border-collapse:collapse;
-                        font-family:Arial,sans-serif;">
-            <tr>
-              <td style="padding:0;margin:0;">
-                <div style="position:relative;width:700px;
-                            height:234px;overflow:hidden;">
-                  <img src="${fundo}"
-                       alt="Assinatura PZ Advogados"
-                       width="700" height="234"
-                       style="display:block;width:700px;height:234px;
-                              border:0;">
-
-                  <div style="font-family:Arial,sans-serif;
-                              color:#ffffff;font-size:11px;
-                              line-height:18px;">
-                    <strong style="font-size:15px;">${nome}</strong>
-                    ${departamento ? `<br>${departamento}` : ""}
-                    ${cargo ? `<br>${cargo}` : ""}
-                    ${email
-                      ? `<br><a href="mailto:${email}"
-                           style="color:#ffffff;text-decoration:none;">
-                           ${email}</a>`
-                      : ""}
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </table>
-        `;
-
-        Office.context.mailbox.item.body.setSignatureAsync(
-            assinatura,
-            { coercionType: Office.CoercionType.Html },
-            function (result) {
-                if (result.status !== Office.AsyncResultStatus.Succeeded) {
-                    console.error(
-                        "PZ: erro ao inserir assinatura:",
-                        result.error
-                    );
-                } else {
-                    console.log("PZ: assinatura inserida.");
-                }
-
-                if (eventObj &&
-                    typeof eventObj.completed === "function") {
-                    eventObj.completed();
-                }
-            }
-        );
-    } catch (error) {
-        console.error("PZ: erro na assinatura:", error);
-
-        if (eventObj &&
-            typeof eventObj.completed === "function") {
-            eventObj.completed();
-        }
-    }
-}
-
-function escapeHtml(value) {
-    return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
-
-console.log("PZ: autorunweb.js carregado.");
+      carregarScript("../Js/autorunshared.js")
+        .then(function () {
+          return carregarScript("../Js/autorunweb.js");
+        })
+        .then(function () {
+          console.log("Scripts do runtime carregados.");
+        })
+        .catch(function (erro) {
+          console.error("Erro ao carregar scripts do runtime:", erro);
+        });
+    });
+  </script>
+</body>
+</html>
