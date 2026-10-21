@@ -158,7 +158,7 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
                // Dados posicionados após a linha vertical.
                 const x = 1080;
                 const largura = 400;
-                let y = 210;
+                let y = 135;
 
                 // Nome.
                 ctx.textAlign = "left";
