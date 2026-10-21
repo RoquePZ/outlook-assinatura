@@ -1,4 +1,3 @@
-
 /* Evento de criação de nova mensagem do Outlook */
 
 function checkSignature(event) {
@@ -157,7 +156,7 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
                 const email = String(userInfo.email || "");
 
                // Dados posicionados após a linha vertical.
-                const x = 1020;
+                const x = 1080;
                 const largura = 400;
                 let y = 285;
 
