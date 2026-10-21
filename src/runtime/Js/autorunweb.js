@@ -1,66 +1,138 @@
-/*
- * Assinatura automática PZ no Outlook Web.
- */
+
+/* Assinatura automática PZ no Outlook Web */
 
 function insert_auto_signature(composeType, userInfo, eventObj) {
-    try {
-        const nome = escapeHtml(userInfo.name || "");
-        const email = escapeHtml(userInfo.email || "");
-        const cargo = escapeHtml(userInfo.job || "");
-        const departamento = escapeHtml(userInfo.department || "");
-        const telefone = escapeHtml(userInfo.phone || "");
+    let finalizado = false;
 
-        const logo =
-            "https://roquepz.github.io/outlook-assinatura/Logo%20PZ.png";
+    function finalizar() {
+        if (!finalizado) {
+            finalizado = true;
 
-        
-const assinatura = `
-  <table cellpadding="0" cellspacing="0" border="0"
-         style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">
-    <tr>
-      <td style="padding-right:14px;vertical-align:middle;">
-        <img src="${logo}"
-             alt="Logo PZ"
-             width="100"
-             style="display:block;width:100px;height:auto;border:0;">
-      </td>
-      <td style="border-left:2px solid #d7d7d7;padding-left:14px;vertical-align:middle;">
-        <strong style="font-size:11pt;color:#222;">${nome}</strong>
-        ${departamento ? `<br>${departamento}` : ""}
-        ${cargo ? `<br>${cargo}` : ""}
-        ${email ? `<br><a href="mailto:${email}" style="color:#0563c1;">${email}</a>` : ""}
-      </td>
-    </tr>
-  </table>
-`;
+            if (eventObj && typeof eventObj.completed === "function") {
+                eventObj.completed();
+            }
+        }
+    }
 
-
+    function inserirAssinatura(html) {
         Office.context.mailbox.item.body.setSignatureAsync(
-            assinatura,
+            html,
             { coercionType: Office.CoercionType.Html },
             function (result) {
                 if (result.status !== Office.AsyncResultStatus.Succeeded) {
-                    console.error(
-                        "Erro ao inserir assinatura:",
-                        result.error
-                    );
+                    console.error("Erro ao inserir assinatura:", result.error);
                 } else {
-                    console.log("Assinatura PZ inserida com sucesso.");
+                    console.log("Assinatura PZ inserida.");
                 }
 
-                if (eventObj &&
-                    typeof eventObj.completed === "function") {
-                    eventObj.completed();
-                }
+                finalizar();
             }
         );
-    } catch (error) {
-        console.error("Erro ao inserir assinatura:", error);
+    }
 
-        if (eventObj &&
-            typeof eventObj.completed === "function") {
-            eventObj.completed();
-        }
+    try {
+        const nome = String(userInfo.name || "");
+        const cargo = String(userInfo.job || "");
+        const departamento = String(userInfo.department || "");
+        const email = String(userInfo.email || "");
+
+        const imagem = new Image();
+        imagem.crossOrigin = "anonymous";
+        imagem.src =
+            "https://roquepz.github.io/outlook-assinatura/fundo-assinatura.png";
+
+        imagem.onload = function () {
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = imagem.naturalWidth;
+                canvas.height = imagem.naturalHeight;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(imagem, 0, 0);
+
+                // Área central livre do banner.
+                const x = 990;
+                const largura = 440;
+                let y = 285;
+
+                ctx.textAlign = "left";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "bold 34px Arial";
+                ctx.fillText(nome, x, y, largura);
+                y += 48;
+
+                ctx.fillStyle = "#F7B875";
+                ctx.font = "26px Arial";
+
+                if (cargo) {
+                    ctx.fillText(cargo, x, y, largura);
+                    y += 38;
+                }
+
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "24px Arial";
+
+                if (departamento) {
+                    ctx.fillText(departamento, x, y, largura);
+                    y += 36;
+                }
+
+                if (email) {
+                    ctx.fillText(email, x, y, largura);
+                }
+
+                const base64 = canvas.toDataURL("image/png")
+                    .split(",")[1];
+
+                Office.context.mailbox.item.addFileAttachmentFromBase64Async(
+                    base64,
+                    "assinatura-pz.png",
+                    { isInline: true },
+                    function (result) {
+                        if (
+                            result.status !==
+                            Office.AsyncResultStatus.Succeeded
+                        ) {
+                            console.error(
+                                "Erro ao adicionar imagem:",
+                                result.error
+                            );
+
+                            // Alternativa para não deixar a assinatura vazia.
+                            inserirAssinatura(
+                                "<div style='font-family:Arial,sans-serif'>" +
+                                "<strong>" + escapeHtml(nome) + "</strong><br>" +
+                                escapeHtml(cargo) + "<br>" +
+                                escapeHtml(departamento) + "<br>" +
+                                escapeHtml(email) +
+                                "</div>"
+                            );
+                            return;
+                        }
+
+                        const assinatura =
+                            '<img src="cid:assinatura-pz.png" ' +
+                            'alt="Assinatura PZ" width="1024" ' +
+                            'style="display:block;width:1024px;' +
+                            'max-width:100%;height:auto;border:0;">';
+
+                        inserirAssinatura(assinatura);
+                    }
+                );
+            } catch (error) {
+                console.error("Erro ao gerar imagem:", error);
+                finalizar();
+            }
+        };
+
+        imagem.onerror = function () {
+            console.error("Não foi possível carregar o banner.");
+            finalizar();
+        };
+    } catch (error) {
+        console.error("Erro na assinatura automática:", error);
+        finalizar();
     }
 }
 
