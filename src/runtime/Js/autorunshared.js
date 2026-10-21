@@ -1,5 +1,7 @@
+/* Evento de criação de nova mensagem do Outlook */
 
 function checkSignature(event) {
+    console.log("EVENTO checkSignature EXECUTADO");    
     let concluido = false;
 
     function finalizar() {
@@ -11,103 +13,98 @@ function checkSignature(event) {
 
     try {
         const mailbox = Office.context.mailbox;
-        const salvo =
+        const perfilSalvo =
             Office.context.roamingSettings.get("user_info") || {};
-        const perfil = mailbox.userProfile || {};
 
+        const perfilOutlook = mailbox.userProfile || {};
+
+        // Preserva os dados cadastrados pelo usuário.
+        // Usa o perfil do Outlook como alternativa.
         const userInfo = {
-            name: salvo.name || perfil.displayName || "",
-            email: salvo.email || perfil.emailAddress || "",
-            job: salvo.job || "",
-            department: salvo.department || ""
+            name: perfilSalvo.name || perfilOutlook.displayName || "",
+            email: perfilSalvo.email ||
+                   perfilOutlook.emailAddress || "",
+            job: perfilSalvo.job || "",
+            department: perfilSalvo.department || "",
+            phone: perfilSalvo.phone || ""
         };
 
-        console.log("PZ: evento executado", userInfo);
+        if (!userInfo.name && !userInfo.email) {
+            console.warn(
+                "Perfil da assinatura não configurado."
+            );
+            finalizar();
+            return;
+        }
 
-        insert_auto_signature(userInfo, finalizar);
-    } catch (e) {
-        console.error("PZ: erro no evento", e);
+        if (typeof insert_auto_signature !== "function") {
+            console.error(
+                "A função insert_auto_signature não foi carregada."
+            );
+            finalizar();
+            return;
+        }
+
+        insert_auto_signature(
+            "new_message",
+            userInfo,
+            { completed: finalizar }
+        );
+
+    } catch (error) {
+        console.error(
+            "Erro ao preparar a assinatura:",
+            error
+        );
         finalizar();
     }
 }
 
-function insert_auto_signature(userInfo, finalizar) {
-    const fundoUrl =
-        "https://roquepz.github.io/outlook-assinatura/fundo-assinatura.png";
+function insert_auto_signature(composeType, userInfo, eventObj) {
+    try {
+        const nome = escapeHtml(userInfo.name || "");
+        const email = escapeHtml(userInfo.email || "");
+        const cargo = escapeHtml(userInfo.job || "");
+        const departamento = escapeHtml(userInfo.department || "");
 
-    const imagem = new Image();
+        const assinatura = `
+          <div style="font-family:Arial,sans-serif;font-size:10pt;color:#333;">
+            <strong>${nome}</strong><br>
+            ${cargo ? cargo + "<br>" : ""}
+            ${departamento ? departamento + "<br>" : ""}
+            ${email ? '<a href="mailto:' + email + '">' + email + '</a>' : ""}
+          </div>
+        `;
 
-    imagem.onload = function () {
-        try {
-            const canvas = document.createElement("canvas");
-            canvas.width = imagem.naturalWidth;
-            canvas.height = imagem.naturalHeight;
-
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(imagem, 0, 0);
-
-            const sx = canvas.width / 2048;
-            const sy = canvas.height / 683;
-            const x = 995 * sx;
-            const y = 240 * sy;
-            const espaco = 48 * sy;
-
-            ctx.fillStyle = "#ffffff";
-            ctx.textBaseline = "top";
-            ctx.font = `bold ${Math.round(34 * sy)}px Arial`;
-            ctx.fillText(userInfo.name || "", x, y);
-
-            ctx.font = `${Math.round(29 * sy)}px Arial`;
-            ctx.fillText(userInfo.department || "", x, y + espaco);
-            ctx.fillText(userInfo.job || "", x, y + espaco * 2);
-            ctx.fillText(userInfo.email || "", x + 70 * sx, y + espaco * 3);
-
-            const base64 = canvas.toDataURL("image/png").split(",")[1];
-
-            console.log("PZ: imagem gerada", canvas.width, canvas.height);
-
-            Office.context.mailbox.item.addFileAttachmentFromBase64Async(
-                base64,
-                "assinatura-pz.png",
-                { isInline: true },
-                function (anexo) {
-                    if (anexo.status !== Office.AsyncResultStatus.Succeeded) {
-                        console.error("PZ: erro no anexo", anexo.error);
-                        finalizar();
-                        return;
-                    }
-
-                    const html =
-                        '<img src="cid:assinatura-pz.png" ' +
-                        'alt="Assinatura PZ Advogados" ' +
-                        'width="700" style="display:block;width:700px;height:auto;border:0;">';
-
-                    Office.context.mailbox.item.body.setSignatureAsync(
-                        html,
-                        { coercionType: Office.CoercionType.Html },
-                        function (resultado) {
-                            if (resultado.status !== Office.AsyncResultStatus.Succeeded) {
-                                console.error("PZ: erro na assinatura", resultado.error);
-                            } else {
-                                console.log("PZ: assinatura inserida");
-                            }
-                            finalizar();
-                        }
-                    );
+        Office.context.mailbox.item.body.setSignatureAsync(
+            assinatura,
+            { coercionType: Office.CoercionType.Html },
+            function (result) {
+                if (result.status !== Office.AsyncResultStatus.Succeeded) {
+                    console.error("Não foi possível inserir a assinatura:", result.error);
                 }
-            );
-        } catch (e) {
-            console.error("PZ: erro ao gerar banner", e);
-            finalizar();
+
+                if (eventObj && typeof eventObj.completed === "function") {
+                    eventObj.completed();
+                }
+            }
+        );
+    } catch (error) {
+        console.error("Erro ao inserir assinatura:", error);
+
+        if (eventObj && typeof eventObj.completed === "function") {
+            eventObj.completed();
         }
-    };
+    }
+}
 
-    imagem.onerror = function () {
-        console.error("PZ: não foi possível carregar o banner", fundoUrl);
-        finalizar();
-    };
-
-    imagem.src = fundoUrl;
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 }
 
 Office.actions.associate("checkSignature", checkSignature);
