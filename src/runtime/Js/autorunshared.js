@@ -157,7 +157,7 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
                 const email = String(userInfo.email || "");
 
                // Dados posicionados após a linha vertical.
-                const x = 1000;
+                const x = 1020;
                 const largura = 400;
                 let y = 285;
 
