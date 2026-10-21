@@ -157,8 +157,8 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
                 const email = String(userInfo.email || "");
 
                 // Coordenadas iniciais para o banner 2048 x 684.
-                const x = 990;
-                const largura = 440;
+                const x = 1000;
+                const largura = 400;
                 let y = 285;
 
                 // Nome.
