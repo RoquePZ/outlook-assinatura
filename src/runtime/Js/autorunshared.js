@@ -1,3 +1,4 @@
+
 /* Evento de criação de nova mensagem do Outlook */
 
 function checkSignature(event) {
@@ -132,8 +133,96 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
             try {
                 const canvas = document.createElement("canvas");
 
-                canvas.width = imagem.naturalWidth;
-                canvas.height = imagem.naturalHeight;
+                const larguraOriginal = imagem.naturalWidth;
+                const alturaOriginal = imagem.naturalHeight;
+
+                // Analisa a imagem para remover as faixas quase brancas
+                // superior e inferior sem alterar a largura do banner.
+                const canvasAnalise = document.createElement("canvas");
+                canvasAnalise.width = larguraOriginal;
+                canvasAnalise.height = alturaOriginal;
+
+                const ctxAnalise = canvasAnalise.getContext("2d", {
+                    willReadFrequently: true
+                });
+
+                if (!ctxAnalise) {
+                    inserirTextoAlternativo(
+                        "Não foi possível analisar a imagem do banner."
+                    );
+                    return;
+                }
+
+                ctxAnalise.drawImage(imagem, 0, 0);
+
+                const pixels = ctxAnalise.getImageData(
+                    0, 0, larguraOriginal, alturaOriginal
+                ).data;
+
+                function linhaTemConteudo(yLinha) {
+                    // Amostra a linha horizontalmente para localizar
+                    // a faixa colorida, ignorando o fundo quase branco.
+                    const passo = 8;
+
+                    for (
+                        let px = 0;
+                        px < larguraOriginal;
+                        px += passo
+                    ) {
+                        const indice =
+                            (yLinha * larguraOriginal + px) * 4;
+
+                        const r = pixels[indice];
+                        const g = pixels[indice + 1];
+                        const b = pixels[indice + 2];
+                        const a = pixels[indice + 3];
+
+                        if (
+                            a > 10 &&
+                            (r < 235 || g < 235 || b < 235)
+                        ) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
+                let topoRecorte = 0;
+                let baseRecorte = alturaOriginal - 1;
+
+                while (
+                    topoRecorte < alturaOriginal - 1 &&
+                    !linhaTemConteudo(topoRecorte)
+                ) {
+                    topoRecorte++;
+                }
+
+                while (
+                    baseRecorte > topoRecorte &&
+                    !linhaTemConteudo(baseRecorte)
+                ) {
+                    baseRecorte--;
+                }
+
+                // Mantém uma pequena margem de segurança nas bordas.
+                const margem = Math.round(alturaOriginal * 0.005);
+
+                topoRecorte = Math.max(
+                    0,
+                    topoRecorte - margem
+                );
+
+                baseRecorte = Math.min(
+                    alturaOriginal - 1,
+                    baseRecorte + margem
+                );
+
+                const alturaRecortada =
+                    baseRecorte - topoRecorte + 1;
+
+                canvas.width = larguraOriginal;
+                canvas.height = alturaRecortada;
 
                 const ctx = canvas.getContext("2d");
 
@@ -144,21 +233,35 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
                     return;
                 }
 
-                // Desenha o banner original.
-                ctx.drawImage(imagem, 0, 0);
+                // Desenha somente a área do banner, sem as margens brancas.
+                ctx.drawImage(
+                    imagem,
+                    0,
+                    topoRecorte,
+                    larguraOriginal,
+                    alturaRecortada,
+                    0,
+                    0,
+                    larguraOriginal,
+                    alturaRecortada
+                );
 
                 // Dados do usuário.
                 const nome = String(userInfo.name || "");
                 const cargo = String(userInfo.job || "");
+
                 const departamento = String(
                     userInfo.department || ""
                 );
+
                 const email = String(userInfo.email || "");
 
-               // Dados posicionados após a linha vertical.
+                // Mantém a posição horizontal atual do texto.
                 const x = 1080;
                 const largura = 400;
-                let y = 285;
+
+                // Compensa o recorte para preservar a posição vertical.
+                let y = 285 - topoRecorte;
 
                 // Nome.
                 ctx.textAlign = "left";
@@ -189,6 +292,7 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
                         y,
                         largura
                     );
+
                     y += 36;
                 }
 
@@ -220,12 +324,13 @@ function insert_auto_signature(composeType, userInfo, eventObj) {
                             return;
                         }
 
-                        // Insere a imagem no corpo da mensagem.
+                        // Insere a imagem proporcionalmente no Outlook.
                         const html =
                             '<img src="cid:assinatura-pz.png" ' +
                             'alt="Assinatura PZ" width="1024" ' +
-                            'style="display:block;width:1024px;' +
-                            'max-width:100%;height:auto;border:0;">';
+                            'style="display:block;width:100%;' +
+                            'max-width:1024px;height:auto;' +
+                            'border:0;margin:0;padding:0;">';
 
                         item.body.setSignatureAsync(
                             html,
