@@ -100,6 +100,18 @@
               </OfficeTab>
             </ExtensionPoint>
           </DesktopFormFactor>
+          
+          <MobileFormFactor>
+            <ExtensionPoint xsi:type="LaunchEvent">
+              <LaunchEvents>
+                <LaunchEvent
+                  Type="OnNewMessageCompose"
+                  FunctionName="checkSignature"/>
+              </LaunchEvents>
+              <SourceLocation resid="Autorun"/>
+            </ExtensionPoint>
+          </MobileFormFactor>
+
         </Host>
       </Hosts>
 
