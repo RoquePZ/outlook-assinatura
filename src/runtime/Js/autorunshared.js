@@ -1,16 +1,38 @@
 /* Evento de criação de nova mensagem do Outlook */
 
 function checkSignature(event) {
+//    console.log("EVENTO checkSignature EXECUTADO");
+
+    // let concluido = false;
+
+    //function finalizar() {
+      //  if (!concluido) {
+       //     concluido = true;
+        //    event.completed();
+        //}
+    //}
+
+    function checkSignature(event) {
     console.log("EVENTO checkSignature EXECUTADO");
+
+    const item = Office.context.mailbox.item;
+
+    item.notificationMessages.addAsync(
+        "diagnostico_assinatura",
+        {
+            type: Office.MailboxEnums.ItemNotificationMessageType.InformationalMessage,
+            message: "Suplemento de assinatura iniciado.",
+            icon: "none",
+            persistent: false
+        },
+        function (result) {
+            console.log("Diagnóstico:", result.status);
+        }
+    );
 
     let concluido = false;
 
-    function finalizar() {
-        if (!concluido) {
-            concluido = true;
-            event.completed();
-        }
-    }
+    // Mantenha aqui o restante da função original.
 
     try {
         const mailbox = Office.context.mailbox;
