@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,25 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Assinatura Microsoft 365</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="../Js/autorunshared.js"></script>
 </head>
 <body>
-  <script>
-    Office.onReady(function (info) {
-      console.log("Runtime do Outlook inicializado:", info.host);
-
-      const script = document.createElement("script");
-      script.src = "../Js/autorunshared.js";
-
-      script.onload = function () {
-        console.log("Runtime compartilhado carregado.");
-      };
-
-      script.onerror = function () {
-        console.error("Erro ao carregar autorunshared.js.");
-      };
-
-      document.body.appendChild(script);
-    });
-  </script>
 </body>
 </html>
